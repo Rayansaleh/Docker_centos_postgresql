@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+
+  postgresql:
+    build: ./dockerrep
+    ports:
+     - "5432:5432"
+
+  java:
+    build: ./java_docker

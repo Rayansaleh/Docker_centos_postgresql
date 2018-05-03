@@ -1,0 +1,40 @@
+FROM centos
+
+MAINTAINER Rayan Saleh <rayan@saleh.fr>
+
+RUN yum -y update; yum clean all
+RUN yum -y install sudo epel-release; yum clean all
+
+#Sudo requires a tty. fix that.
+RUN sed -i 's/.*requiretty$/#Defaults requiretty/' /etc/sudoers
+# Install pgdg repo for getting new postgres RPM
+RUN rpm -Uvh https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
+
+# Install Postgres Version 9.4
+RUN yum install -y postgresql10-server postgresql10
+
+# Modified setup script to bypass systemctl variable read stuff
+ADD ./postgresql-setup /usr/pgsql-10/bin/postgresql-setup
+
+# Update data folder perms
+RUN chown -R postgres.postgres /var/lib/pgsql
+
+#Modify perms on setup script
+RUN chmod +x /usr/pgsql-10/bin/postgresql-setup
+
+#Initialize data for pg engine
+RUN /usr/pgsql-10/bin/postgresql-setup initdb 
+
+#Access from all over --- NEVER DO THIS IN POST DEV ENVs !!!!!!!!!!!!!!!!!!! <--- READ THIS 
+ADD ./postgresql.conf /var/lib/pgsql/10/data/postgresql.conf
+ADD ./pg_hba.conf /var/lib/pgsql/10/data/pg_hba.conf
+
+#Add start script for postgres
+ADD ./start_postgres.sh /start_postgres.sh
+
+RUN chmod +x /start_postgres.sh
+
+EXPOSE 5432
+
+#Run pgEngine
+CMD ["/start_postgres.sh"]
