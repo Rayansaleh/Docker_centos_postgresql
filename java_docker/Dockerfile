@@ -8,15 +8,20 @@ RUN yum install -y \
 
 COPY postgresql-42.2.1.jar lib/jvm/jre/lib/ext 
 
-COPY Entreprise_Ebiz /usr/appEbiz
+COPY ./Entreprise_Ebiz /usr/appEbiz 
+
+COPY ./Manifest.txt /usr/appEbiz/src
 
 WORKDIR /usr/appEbiz/src
 
 RUN javac -encoding utf8 *.java
 
-RUN jar -cf appEbiz.jar *
+RUN jar cfm appEbiz.jar Manifest.txt *.class
 
 WORKDIR /
 
-CMD export CLASSPATH=/usr/appEbiz/src/appEbiz.jar:/lib/jvm/jre/lib//ext/postgresql-42.2.1.jar && java /usr/appEbiz/src/Main 
+COPY ./execute.sh /execute.sh
 
+RUN chmod +x /execute.sh
+
+CMD ["/execute.sh"]
